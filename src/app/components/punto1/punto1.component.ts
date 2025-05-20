@@ -1,6 +1,12 @@
 // punto1.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  New
+} from '../../models/new.model';
+import {
+  NewService
+} from '../../services/new.service';
 
 interface CarouselImage {
   src: string;
@@ -17,10 +23,11 @@ interface CarouselImage {
   styleUrls: ['./punto1.component.css']
 })
 export class Punto1Component implements OnInit, OnDestroy {
-  // Date variables
-  hoy: number = new Date().getDate();
-  mes: number = new Date().getMonth() + 1;
-
+  news!: Array<New>;
+  new!: New;
+  constructor(private newService: NewService) {
+    this.viewNews();
+  }
   // Carousel variables
   currentSlide: number = 0;
   interval: any;
@@ -98,5 +105,20 @@ export class Punto1Component implements OnInit, OnDestroy {
     // Reset autoplay timer when manually changing slides
     this.stopAutoPlay();
     this.startAutoPlay();
+  }
+
+  private viewNews() {
+    this.newService.getNews ().subscribe ((data: any) => {
+      console.log(data.homepageArticles[0])
+      this.news = data.homepageArticles[0].articles.map ((item: any) => {
+        return new New (
+          item.id,
+          item.title,
+          item.mainMedia[0].original.alt,
+          item.mainMedia[0].original.url,
+          item.publishedAt
+        );
+      });
+    });
   }
 }

@@ -27,10 +27,8 @@ export class TicketService {
   agregarTicket(ticket: Ticket): void {
     // Crear una copia para evitar problemas de referencia
     const nuevoTicket = {...ticket};
-
     // Asegurarse de que categoriaTurista sea un número
     nuevoTicket.categoriaTurista = Number (nuevoTicket.categoriaTurista);
-
     this.tickets.push (nuevoTicket);
     // Emitir una nueva copia del array
     this.ticketsSubject.next ([...this.tickets]);
@@ -58,10 +56,8 @@ export class TicketService {
     this.tickets.forEach (ticket => {
       const categoriaId = Number (ticket.categoriaTurista);
       const categoria = resumen.find (r => r.categoria === categoriaId);
-
       if (categoria) {
         categoria.cantidad++;
-
         // Aplicar descuentos según la categoría
         let precioFinal = ticket.precio;
         if (categoriaId === CATEGORIA_TURISTA.MENOR) {
@@ -102,7 +98,7 @@ export class TicketService {
 
       // Emitir una nueva copia del array
       this.ticketsSubject.next ([...this.tickets]);
-    }
+    }1
   }
 
 // Método para obtener un solo ticket por su índice
