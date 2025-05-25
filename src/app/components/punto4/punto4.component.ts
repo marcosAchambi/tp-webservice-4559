@@ -46,8 +46,8 @@ export class Punto4Component implements OnInit {
   }
 
   ngOnInit(): void {
-        throw new Error('Method not implemented.');
-    }
+    // Inicialización si es necesaria
+  }
 
   onGenerateImage() {
     if (this.postForm.invalid) {
@@ -63,48 +63,86 @@ export class Punto4Component implements OnInit {
     const title = this.postForm.get ('title')?.value;
     const style = this.postForm.get ('style')?.value;
 
-    // Generar descripción de imagen usando Gemini
-    this.geminiService.generateImageDescription (title).subscribe ({
-      next: (response) => {
-        if (response.candidates && response.candidates[0]) {
-          this.generatedImageDescription = response.candidates[0].content.parts[0].text;
+    // Puedes combinar el título y el estilo en el prompt si lo deseas
+    const prompt = `Crea una imagen para un post de Facebook con el título: "${title}" en estilo ${style}.`;
 
-          // Aquí simularemos la generación de imagen
-          // En producción, usarías un servicio como DALL-E, Midjourney API, etc.
-          this.simulateImageGeneration (this.generatedImageDescription);
+    this.geminiService.generateGeminiImage (prompt).subscribe ({
+      next: (response) => {
+        // Busca la parte que contiene la imagen en base64
+        const imagePart = response?.candidates?.[0]?.content?.parts?.find (
+          (part: any) => part.inlineData && part.inlineData.mimeType === 'image/png'
+        );
+        if (imagePart && imagePart.inlineData.data) {
+          this.generatedImage = `data:image/png;base64,${imagePart.inlineData.data}`;
+          this.generatedImageDescription = `Imagen generada con estilo ${style} para el título: "${title}"`;
+        } else {
+          this.error = 'No se pudo generar la imagen. Intenta con otro título.';
+          this.generateFallbackImage (title, style);
         }
+        this.isLoading = false;
       },
       error: (error) => {
-        console.error ('Error generando descripción:', error);
-        this.error = 'Error al generar la descripción de la imagen. Verifica tu API key.';
+        this.error = 'Error al generar la imagen. Usando imagen de respaldo.';
+        this.generateFallbackImage (title, style);
         this.isLoading = false;
+        console.log (error);
       }
     });
   }
 
-  private simulateImageGeneration(description: string) {
-    // Simulación de generación de imagen
-    // En producción, aquí harías una llamada a un servicio de generación de imágenes
+  private generateFallbackImage(title: string, style: string) {
+    // Generar imagen canvas como respaldo
     setTimeout (() => {
-      // Generar una imagen placeholder basada en el título
       const canvas = document.createElement ('canvas');
       const ctx = canvas.getContext ('2d');
 
       if (ctx) {
         canvas.width = 1200;
-        canvas.height = 630; // Dimensiones optimales para Facebook
+        canvas.height = 630;
 
-        // Fondo degradado
+        // Configurar estilos según la selección
+        const styles = {
+          moderno: {
+            gradient: ['#667eea', '#764ba2'],
+            textColor: 'white',
+            font: 'bold 60px Arial'
+          },
+          minimalista: {
+            gradient: ['#f8f9fa', '#e9ecef'],
+            textColor: '#333333',
+            font: 'bold 50px Arial'
+          },
+          colorido: {
+            gradient: ['#ff6b6b', '#4ecdc4', '#45b7d1'],
+            textColor: 'white',
+            font: 'bold 65px Arial'
+          },
+          profesional: {
+            gradient: ['#2c3e50', '#34495e'],
+            textColor: 'white',
+            font: 'bold 55px Arial'
+          },
+          creativo: {
+            gradient: ['#fa709a', '#fee140', '#ff9a9e'],
+            textColor: 'white',
+            font: 'bold 70px Georgia'
+          }
+        };
+
+        const selectedStyle = styles[style as keyof typeof styles] || styles.moderno;
+
+        // Crear gradiente
         const gradient = ctx.createLinearGradient (0, 0, canvas.width, canvas.height);
-        gradient.addColorStop (0, '#667eea');
-        gradient.addColorStop (1, '#764ba2');
+        selectedStyle.gradient.forEach ((color, index) => {
+          gradient.addColorStop (index / (selectedStyle.gradient.length - 1), color);
+        });
+
         ctx.fillStyle = gradient;
         ctx.fillRect (0, 0, canvas.width, canvas.height);
 
-        // Texto principal
-        const title = this.postForm.get ('title')?.value;
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 60px Arial';
+        // Configurar texto
+        ctx.fillStyle = selectedStyle.textColor;
+        ctx.font = selectedStyle.font;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
@@ -112,11 +150,12 @@ export class Punto4Component implements OnInit {
         const words = title.split (' ');
         const lines = [];
         let currentLine = '';
+        const maxWidth = canvas.width - 100;
 
         words.forEach ((word: string) => {
           const testLine = currentLine + word + ' ';
           const metrics = ctx.measureText (testLine);
-          if (metrics.width > canvas.width - 100 && currentLine !== '') {
+          if (metrics.width > maxWidth && currentLine !== '') {
             lines.push (currentLine.trim ());
             currentLine = word + ' ';
           } else {
@@ -126,19 +165,34 @@ export class Punto4Component implements OnInit {
         lines.push (currentLine.trim ());
 
         // Dibujar líneas centradas
-        const lineHeight = 70;
-        const startY = (canvas.height - (lines.length * lineHeight)) / 2 + 30;
+        const lineHeight = 80;
+        const startY = (canvas.height - (lines.length * lineHeight)) / 2 + 40;
 
         lines.forEach ((line, index) => {
           ctx.fillText (line, canvas.width / 2, startY + (index * lineHeight));
         });
 
-        // Convertir a base64
-        this.generatedImage = canvas.toDataURL ('image/png');
-      }
+        // Agregar elementos decorativos según el estilo
+        if (style === 'creativo') {
+          // Añadir círculos decorativos
+          for (let i = 0; i < 5; i++) {
+            ctx.beginPath ();
+            ctx.arc (
+              Math.random () * canvas.width,
+              Math.random () * canvas.height,
+              Math.random () * 50 + 10,
+              0,
+              2 * Math.PI
+            );
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.random () * 0.3})`;
+            ctx.fill ();
+          }
+        }
 
-      this.isLoading = false;
-    }, 2000);
+        this.generatedImage = canvas.toDataURL ('image/png');
+        this.generatedImageDescription = `Imagen generada con estilo ${style} para el título: "${title}"`;
+      }
+    }, 1000);
   }
 
   downloadImage() {
@@ -151,7 +205,11 @@ export class Punto4Component implements OnInit {
   }
 
   resetForm() {
-    this.postForm.reset ();
+    this.postForm.reset ({
+      title: '',
+      description: '',
+      style: 'moderno'
+    });
     this.generatedImageDescription = '';
     this.generatedImage = '';
     this.error = '';
