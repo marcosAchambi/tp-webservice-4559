@@ -108,8 +108,8 @@ export class Punto1Component implements OnInit, OnDestroy {
   }
 
   private viewNews() {
-    this.newService.getNews ().subscribe ((data: any) => {
-      console.log(data.homepageArticles[0])
+    this.newService.getNews ().subscribe ((data: any)=> {
+      //console.log(data.homepageArticles[0])
       this.news = data.homepageArticles[0].articles.map ((item: any) => {
         return new New (
           item.id,

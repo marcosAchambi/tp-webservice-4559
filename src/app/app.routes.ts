@@ -7,19 +7,19 @@ import {
 } from './components/tickets/tickets.component';
 export const routes: Routes = [
   {
-    path: 'punto1',
+    path: 'puntoA',
     component: Punto1Component,
   },
   {
-    path: 'punto2',
+    path: 'puntoB',
     component: Punto2Component,
   },
   {
-    path: 'punto3',
+    path: 'puntoC',
     component: Punto3Component,
   },
   {
-    path: 'punto4',
+    path: 'puntoD',
     component: TicketsComponent,
   }
 ];
