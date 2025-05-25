@@ -3,8 +3,8 @@ import { Punto1Component } from './components/punto1/punto1.component';
 import { Punto2Component } from './components/punto2/punto2.component';
 import { Punto3Component } from './components/punto3/punto3.component';
 import {
-  TicketsComponent
-} from './components/tickets/tickets.component';
+  Punto4Component
+} from './components/punto4/punto4.component';
 export const routes: Routes = [
   {
     path: 'puntoA',
@@ -20,6 +20,6 @@ export const routes: Routes = [
   },
   {
     path: 'puntoD',
-    component: TicketsComponent,
+    component: Punto4Component,
   }
 ];

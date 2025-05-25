@@ -5,8 +5,6 @@ import {
 } from '@angular/core';
 import {
   CurrencyPipe,
-  DecimalPipe,
-  NgClass,
   NgForOf,
   NgIf
 } from '@angular/common';
@@ -28,8 +26,7 @@ import {
     NgForOf,
     NgIf,
     ReactiveFormsModule,
-    CurrencyPipe,
-    DecimalPipe
+    CurrencyPipe
   ],
   templateUrl: './punto3.component.html',
   styleUrl: './punto3.component.css'

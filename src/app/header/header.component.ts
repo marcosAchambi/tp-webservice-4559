@@ -3,18 +3,13 @@ import {
   OnInit
 } from '@angular/core';
 import {
-  RouterLink,
-  RouterOutlet
+  RouterLink
 } from '@angular/router';
-import {
-  ShoppingCartComponent
-} from '../components/shopping-cart/shopping-cart.component';
 
 @Component({
   selector: 'app-header',
   imports: [
-    RouterLink,
-    ShoppingCartComponent
+    RouterLink
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
