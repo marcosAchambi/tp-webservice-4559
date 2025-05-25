@@ -1,112 +1,147 @@
+// src/app/components/punto3/punto3.component.ts
 import {
   Component,
   OnInit
 } from '@angular/core';
 import {
-  GameService
-} from '../../services/game.service';
-import {
+  CurrencyPipe,
+  DecimalPipe,
   NgClass,
   NgForOf,
   NgIf
 } from '@angular/common';
 import {
-  FormsModule
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators
 } from '@angular/forms';
 import {
-  SafeHtml
-} from '@angular/platform-browser';
+  CurrencyService
+} from '../../services/currency.service';
 
-@Component({
+@Component ({
   selector: 'app-punto3',
   imports: [
-    NgClass,
     FormsModule,
     NgForOf,
-    NgIf
+    NgIf,
+    ReactiveFormsModule,
+    CurrencyPipe,
+    DecimalPipe
   ],
   templateUrl: './punto3.component.html',
   styleUrl: './punto3.component.css'
 })
 export class Punto3Component implements OnInit {
 
-  letra: string = '';
-  mostrarModal: boolean = false;
-  mensajeModal: string = '';
+  currencies: any[] = []; // Declarar correctamente
+  exchangeRates: any = {}; // Declarar correctamente
 
-  // Array con las letras del abecedario
-  letras: string[] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split ('');
+  converterForm: FormGroup;
+  convertedAmount: number = 0;
+  isLoading: boolean = false;
 
-  constructor(public gameService: GameService) {
+  constructor(private fb: FormBuilder, private currencyService: CurrencyService) {
+    this.converterForm = this.fb.group ({
+      amount: ['', [Validators.required, Validators.min (0.01)]],
+      fromCurrency: ['USD', Validators.required],
+      toCurrency: ['EUR', Validators.required]
+    });
   }
 
   ngOnInit(): void {
-    // Iniciar un nuevo juego al cargar el componente
-    this.gameService.iniciarJuego ();
+    this.currencyService.getCurrencyList ().subscribe ((data: any) => {
+      this.currencies = Object.entries (data.currencies).map (([code, name]: any) => ({
+        code,
+        name,
+        symbol: this.getCurrencySymbol (code)
+      }));
+    });
+
+    this.loadExchangeRates ('USD');
+    this.converterForm.valueChanges.subscribe (() => {
+      if (this.converterForm.valid) {
+        this.convertCurrency ();
+      }
+    });
   }
 
-  // Método para intentar adivinar una letra
-  intentar(letraSeleccionada: string): void {
-    this.gameService.intentarLetra (letraSeleccionada);
+  loadExchangeRates(source: string) {
+    const toCurrencies = this.currencies.map (c => c.code).join (',');
+    this.currencyService.getCurrencyLive (source, toCurrencies).subscribe ((data: any) => {
+      this.exchangeRates = {};
+      Object.keys (data.quotes).forEach (key => {
+        const from = key.substring (0, 3);
+        const to = key.substring (3);
+        if (!this.exchangeRates[from]) this.exchangeRates[from] = {};
+        this.exchangeRates[from][to] = data.quotes[key];
+      });
+    });
+  }
 
-    // Verificar si el juego terminó
-    if (this.gameService.isJuegoTerminado ()) {
-      if (this.gameService.isGanador ()) {
-        this.mostrarModalGanador ();
+  convertCurrency(): void {
+    if (this.converterForm.invalid) return;
+    this.isLoading = true;
+    const {
+      amount,
+      fromCurrency,
+      toCurrency
+    } = this.converterForm.value;
+
+    if (!this.exchangeRates[fromCurrency]) {
+      this.loadExchangeRates (fromCurrency);
+      setTimeout (() => this.convertCurrency (), 600);
+      return;
+    }
+
+    setTimeout (() => {
+      if (fromCurrency === toCurrency) {
+        this.convertedAmount = amount;
       } else {
-        this.mostrarModalPerdedor ();
+        const rate = this.getExchangeRate (fromCurrency, toCurrency);
+        this.convertedAmount = amount * rate;
       }
+      this.isLoading = false;
+    }, 500);
+  }
+
+  getExchangeRate(from: string, to: string): number {
+    if (this.exchangeRates[from] && this.exchangeRates[from][to]) {
+      return this.exchangeRates[from][to];
     }
+    return 1;
   }
 
-  // Método para intentar adivinar una letra desde el input
-  intentarDesdeInput(): void {
-    if (this.letra && this.letra.length === 1) {
-      this.gameService.intentarLetra (this.letra);
-      this.letra = '';
-
-      // Verificar si el juego terminó
-      if (this.gameService.isJuegoTerminado ()) {
-        if (this.gameService.isGanador ()) {
-          this.mostrarModalGanador ();
-        } else {
-          this.mostrarModalPerdedor ();
-        }
-      }
-    }
+  getCurrencySymbol(code: string): string {
+    const symbols: any = {
+      USD: '$',
+      EUR: '€',
+      ARS: '$',
+      GBP: '£'
+    };
+    return symbols[code] || code;
   }
 
-  // Método para reiniciar el juego
-  reiniciarJuego(): void {
-    this.gameService.iniciarJuego ();
-    this.mostrarModal = false;
+  swapCurrencies(): void {
+    const fromCurrency = this.converterForm.get ('fromCurrency')?.value;
+    const toCurrency = this.converterForm.get ('toCurrency')?.value;
+    this.converterForm.patchValue ({
+      fromCurrency: toCurrency,
+      toCurrency: fromCurrency
+    });
   }
 
-  // Método para mostrar el modal de ganador
-  mostrarModalGanador(): void {
-    this.mensajeModal = '¡Felicidades! Has adivinado la palabra: ' + this.gameService.getPalabraActual ();
-    this.mostrarModal = true;
+  get amount() {
+    return this.converterForm.get ('amount');
   }
 
-  // Método para mostrar el modal de perdedor
-  mostrarModalPerdedor(): void {
-    this.mensajeModal = '¡Has perdido! La palabra era: ' + this.gameService.getPalabraActual ();
-    this.mostrarModal = true;
+  get fromCurrency() {
+    return this.converterForm.get ('fromCurrency');
   }
 
-  // Método para verificar si una letra ya ha sido usada
-  letraUsada(letra: string): boolean {
-    return this.gameService.getLetrasAdivinadas ().includes (letra);
-  }
-
-  // Método para obtener la imagen según el número de intentos
-  getImagenAhorcado(): string {
-    const intentosFallidos = this.gameService.getIntentosIniciales () - this.gameService.getIntentos ();
-    return `hangman/hangman-${intentosFallidos}.svg`;
-  }
-
-  // Cerrar el modal
-  cerrarModal(): void {
-    this.mostrarModal = false;
+  get toCurrency() {
+    return this.converterForm.get ('toCurrency');
   }
 }
