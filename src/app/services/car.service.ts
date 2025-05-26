@@ -22,4 +22,14 @@ export class CarService {
     };
     return this._http.get('https://car-specs.p.rapidapi.com/v2/cars/makes', httpOptions);
   }
+
+  public getModels(id: number): Observable<any> {
+    const httpOptions = {
+      headers: new HttpHeaders ({
+        'X-Rapidapi-Key': 'f99329a568mshb54b6edf54e6da3p15d5bejsncabbcf2312b9',
+        'X-Rapidapi-Host': 'car-specs.p.rapidapi.com'
+      })
+    };
+    return this._http.get (`https://car-specs.p.rapidapi.com/v2/cars/makes/${id}/models`, httpOptions);
+  }
 }
