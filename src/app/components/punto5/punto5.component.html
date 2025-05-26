@@ -1,0 +1,78 @@
+<div class="container mx-auto p-6 max-w-4xl dark:bg-gray-900">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+        Empresas
+        Destacadas
+      </h1>
+      <p class="text-xl text-gray-600 dark:text-gray-300">
+        Descubre
+        información
+        financiera
+        de
+        las
+        principales
+        compañías
+      </p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Lista de Empresas -->
+      <div class="bg-gray-50 dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border dark:border-gray-700">
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4">
+          <h2 class="text-2xl font-bold text-white">
+            Lista
+            de
+            Empresas
+          </h2>
+        </div>
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+          <div
+            *ngFor="let company of companies"
+            class="p-6 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-all duration-200 border-l-4 border-transparent hover:border-blue-500"
+            (click)="selectCompany(company)"
+            [class.bg-blue-50]="selectedCompany?.id === company.id"
+            [class.dark\:bg-blue-900]="selectedCompany?.id === company.id"
+            [class.border-blue-500]="selectedCompany?.id === company.id"
+          >
+            <div class="flex items-center space-x-4">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ company.name }}</h3>
+              </div>
+              <div class="text-blue-600 dark:text-blue-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="selectedStockDetails" class="mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        <div class="flex items-center space-x-6">
+          <img [src]="selectedStockDetails.logo" alt="Logo" class="w-20 h-20 rounded-full border"/>
+          <div>
+            <h2 class="text-2xl font-bold">{{ selectedStockDetails.companyName }}
+              ({{ selectedStockDetails.symbol }}
+              )</h2>
+            <p class="text-gray-600 dark:text-gray-300">{{ selectedStockDetails.sector }}
+              - {{ selectedStockDetails.industry }}</p>
+            <p class="text-gray-500 dark:text-gray-400">{{ selectedStockDetails.city }}
+              , {{ selectedStockDetails.state }}
+              , {{ selectedStockDetails.country }}</p>
+            <a [href]="'https://' + selectedStockDetails.website" target="_blank" class="text-blue-600 underline">Sitio
+              web</a>
+          </div>
+        </div>
+        <p class="mt-4 text-gray-700 dark:text-gray-200">{{ selectedStockDetails.description }}</p>
+        <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          Fundada
+          en {{ selectedStockDetails.founded }}
+          |
+          Empleados: {{ selectedStockDetails.employees }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
