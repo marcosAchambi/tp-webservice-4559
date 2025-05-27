@@ -6,6 +6,8 @@ import { Punto4Component } from './components/punto4/punto4.component';
 import {
   Punto5Component
 } from './components/punto5/punto5.component';
+import {
+  BookComponent } from './components/book/book.component';
 export const routes: Routes = [
   {
     path: 'puntoA',
@@ -26,5 +28,9 @@ export const routes: Routes = [
   {
     path: 'puntoE',
     component: Punto5Component,
+  },
+  {
+    path: 'book',
+    component: BookComponent,
   }
 ];
